@@ -1,10 +1,6 @@
 #include <TinyGPS++.h>
 #include <RTClib.h>
-#include <Wire.h>
 #include <SoftwareSerial.h>
-#include <time.h>
-
-#define IST_OFFSET 19800
 
 RTC_DS3231 rtc;
 TinyGPSPlus gps;
@@ -63,9 +59,7 @@ void loop()
         }
       }
     }
-  }
-
-  
+  } 
 
   Serial.println(String(rtcTime.day()) + "/" + String(rtcTime.month()) + "/" + String(rtcTime.year()) + "\t\t" + String(rtcTime.hour()) + ":" + String(rtcTime.minute()) + ":" + String(rtcTime.second()) + "\tGps: " +String(gps.time.value()));
 
