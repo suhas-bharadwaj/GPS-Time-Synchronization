@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 
 RTC_DS3231 rtc; TinyGPSPlus gps; 
-bool isUpdated = false;
+bool isUpdated;
 
 SoftwareSerial ss(4, 3);
 
@@ -17,10 +17,8 @@ void setup()
     Serial.println("RTC not found");
   }
 
-  isUpdated = false;
-
   if(rtc.lostPower()){
-    isUpdated = false;
+    rtc.adjust(DateTime(2000, 01, 01, 0, 0, 0));
   }
   rtc.adjust(DateTime(2000, 01, 01, 0, 0, 0));
   rtc.disable32K(); 
@@ -29,26 +27,24 @@ void setup()
 
 void loop(){
   DateTime rtcTime = rtc.now();
-
-  if(rtc.lostPower()){
-    isUpdated = false;
-  }
   
-  while(ss.available() > 0 && isUpdated == false)
+  if(!isUpdated)
   {
-    if(gps.encode(ss.read()))
+    while(ss.available() > 0)
     {
-      Serial.println("GPS sentence received");
-      if(gps.time.isValid() && gps.date.isValid() && gps.date.day() != 0)
+      if(gps.encode(ss.read()))
       {
-          rtc.adjust(DateTime(gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute() ,gps.time.second()));
-          Serial.println("Updated");
-          isUpdated = true;
+        Serial.println("GPS sentence received");
+        if(gps.time.isValid() && gps.date.isValid() && ((rtcTime.second() <= gps.time.second())))
+        {
+            rtc.adjust(DateTime(gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute() ,gps.time.second()));
+            Serial.println("Updated");
+        }
       }
-         
     }
+    isUpdated = true;
   }
-  
+
   Serial.println(String(rtcTime.day()) + "/" + String(rtcTime.month()) + "/" + String(rtcTime.year()) + "\t\t" + String(rtcTime.hour()) + ":" + String(rtcTime.minute()) + ":" + String(rtcTime.second()) + "\tGps: " +String(gps.time.value()));
   delay(1000);
 }
